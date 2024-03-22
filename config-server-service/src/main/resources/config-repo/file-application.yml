@@ -1,0 +1,17 @@
+server:
+  port: 9090
+
+spring:
+  security:
+    user:
+      name: aral
+      password: root
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:9999/TemporaryFileDB
+    username: postgres
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true

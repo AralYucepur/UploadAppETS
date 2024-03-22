@@ -1,0 +1,4 @@
+rootProject.name = 'UploadApp'
+include 'file-service'
+include 'config-server-service'
+
