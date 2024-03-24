@@ -20,7 +20,8 @@ public class FileServiceSecurityConfig {
 
         httpSecurity.csrf().disable();
         httpSecurity.authorizeRequests()
-                .antMatchers("/v3/api-docs/**","/swagger-ui/**")
+                .antMatchers("/v3/api-docs/**","/swagger-ui/**","/v1/dev/file/upload","/v1/dev/file/list"
+                        ,"/v1/dev/file/find_file","/v1/dev/file/delete_file","/v1/dev/file/find_byte_file")
                 .permitAll()
                 .anyRequest()
                 .authenticated();
