@@ -1,7 +1,9 @@
 package com.ets.service;
 
+import com.ets.exception.ErrorType;
+import com.ets.exception.FileServiceException;
 import com.ets.repository.IFileRepository;
-import com.ets.repository.entity.FileEntity;
+import com.ets.repository.entity.FilesEntity;
 import com.ets.utility.ServiceManager;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -12,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class FileService extends ServiceManager<FileEntity,Long> {
+public class FileService extends ServiceManager<FilesEntity,Long> {
 
     private final IFileRepository repository;
 
@@ -21,45 +23,70 @@ public class FileService extends ServiceManager<FileEntity,Long> {
         this.repository = repository;
     }
 
-    public void saveFile(MultipartFile file) throws IOException {
+    public String saveFile(MultipartFile file) throws IOException {
         // Check Size
-        if (file.getSize() > 5 * 1024 * 1024) {
-            throw new IllegalArgumentException("");
+        if(file.getSize() > 5 * 1024 * 1024) {
+            throw new IllegalArgumentException("Dosya boyutu 5mb dan fazla olamaz!");
         }
 
         // Check Path
         String fileName = StringUtils.cleanPath(file.getOriginalFilename());
         String fileExtension = getFileExtension(fileName);
-        if (!isValidExtension(fileExtension)) {
-            throw new IllegalArgumentException("");
+        if(!isValidExtension(fileExtension)) {
+            throw new IllegalArgumentException("Dosya uzantısı desteklenmiyor. Lütfen png, jpeg, jpg, docx, pdf, xls türünde dosya yükleyin");
         }
 
         // Save File
-        String filePath = "" + fileName;
+        String filePath = "/Users/aral/Desktop/ets-proje/" + fileName;
         java.io.File localFile = new java.io.File(filePath);
+        if(localFile.exists()){
+            throw new FileServiceException(ErrorType.UPLOAD_ERROR);
+        }
         file.transferTo(localFile);
 
         // Save File information
-        FileEntity fileEntity = new FileEntity(fileName, fileExtension, filePath, file.getSize());
-        save(fileEntity);
+        FilesEntity filesEntity = new FilesEntity(fileName, fileExtension, filePath, file.getSize());
+        save(filesEntity);
+        return "Dosya yükleme işleminiz başarıyla gerçekleşmiştir.";
     }
 
-    public List<FileEntity> getAllFiles() {
+    public List<FilesEntity> getAllFiles() {
         return findAll();
     }
 
-    public Optional<FileEntity> getFileById(Long id) {
-        return findById(id);
+    public FilesEntity getFileById(Long id) {
+        Optional<FilesEntity> optionalFilesEntity = findById(id);
+        if(optionalFilesEntity.isPresent()){
+            return optionalFilesEntity.get();
+        }else{
+            throw new IllegalStateException("Dosya bulunamadı.");
+        }
     }
 
-    public void deleteFile(Long id) {
-        deleteById(id);
+    public String deleteFileById(Long id) {
+        Optional<FilesEntity> optionalFilesEntity = findById(id);
+        if(optionalFilesEntity.isPresent()) {
+            String filePath = optionalFilesEntity.get().getFilePath();
+            java.io.File file = new java.io.File(filePath);
+            if(file.exists()) {
+                if(file.delete()) {
+                    deleteById(id);
+                    return "Dosya başarıyla silinmiştir.";
+                }else{
+                    throw new IllegalStateException("Dosya diskten silinirken bir hata oluştu.");
+                }
+            }else{
+                throw new IllegalStateException("Dosya diskte bulunamadı.");
+            }
+        }else{
+            throw new IllegalStateException("Dosya bulunamadı.");
+        }
     }
 
     public byte[] getFileContent(Long id) throws IOException {
-        Optional<FileEntity> fileEntityOptional = findById(id);
-        if (fileEntityOptional.isPresent()) {
-            java.io.File file = new java.io.File(fileEntityOptional.get().getFilePath());
+        Optional<FilesEntity> optionalFilesEntity = findById(id);
+        if (optionalFilesEntity.isPresent()) {
+            java.io.File file = new java.io.File(optionalFilesEntity.get().getFilePath());
             return java.nio.file.Files.readAllBytes(file.toPath());
         } else {
             throw new IllegalArgumentException("Dosya bulunamadı.");
