@@ -1,19 +1,18 @@
 package com.ets.repository.entity;
 
-import lombok.Builder;
 import lombok.Data;
 
 import javax.persistence.*;
 
+
 @Data
-@Builder
 @Table(name = "Files")
 @Entity
-public class FileEntity {
-    public FileEntity() {
+public class FilesEntity {
+    public FilesEntity() {
     }
 
-    public FileEntity(String name, String extension, String filePath, Long size) {
+    public FilesEntity(String name, String extension, String filePath, Long size) {
         this.name = name;
         this.extension = extension;
         this.filePath = filePath;
